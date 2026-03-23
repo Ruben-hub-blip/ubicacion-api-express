@@ -3,20 +3,21 @@ import pool from "../db.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
+
+    const { id } = req.params;
 
     const result = await pool.query(`
       SELECT 
-        b.id,
-        b.nombre,
-        b.latitud,
-        b.longitud,
-        l.nombre AS localidad
-      FROM barrios b
-      JOIN localidades l ON b.id_localidad = l.id
-      ORDER BY b.nombre
-    `);
+        id,
+        nombre,
+        latitud,
+        longitud
+      FROM barrios
+      WHERE id_localidad = $1
+      ORDER BY nombre
+    `,[id]);
 
     res.json(result.rows);
 
@@ -24,6 +25,18 @@ router.get("/", async (req, res) => {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
+});
+
+router.get("/detalle/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const result = await pool.query(`
+    SELECT id, nombre, latitud, longitud
+    FROM barrios
+    WHERE id = $1
+  `, [id]);
+
+  res.json(result.rows[0]);
 });
 
 export default router;
